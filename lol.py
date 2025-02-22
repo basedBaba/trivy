@@ -1,25 +1,78 @@
-import os, sys, json  # Unnecessary imports
+#!/usr/bin/env python3
 
-x = 10
-y=  20 # Bad spacing
-def badFunction (  a,b ):# No docstring, bad spacing
-  if a > 0:print("Positive") # No indentation, inline statement
-  else:
-      print ("Negative" )  # Extra spaces, inconsistent indentation
-  return x+y # Unused variables, bad return
 
-def anotherFunc():
-        pass # Bad indentation
+import argparse
+from cryptography.fernet import Fernet
 
-class testClass: # Class name should be in PascalCase
- def __init__( self,x,y ):
-      self.x=x
-      self.y = y
- def method_1( self ): return self.x*self.y  # Inline return, bad spacing
 
- def method2(self,    a,b): # Inconsistent method naming, bad spacing
-  if(a>b): return a   # No indentation
-  else:
-       return b
+def print_banner():
+    print(r"""
+                  ____              
+      ___  ____  / __ \___  _____   
+     / _ \/ __ \/ / / / _ \/ ___/   
+    /  __/ / / / /_/ /  __/ /__     
+    \___/_/ /_/_____/\___/\___/     
+                                     
+    """)
 
-def bad_
+
+def get_args():
+    parser = argparse.ArgumentParser(description="Encrypt/Decrypt files")
+
+    parser.add_argument("command", help="encrypt/decrypt")
+    parser.add_argument("file", help="file to be encrypted/decrypted")
+    parser.add_argument("-k", "--key", help="secret key for decryption")
+
+    args = parser.parse_args()
+
+    if args.command == "decrypt" and not args.key:
+        parser.error("enter the secret key for decryption")
+        
+    return args
+
+
+def encrypt_file(file):
+    key = Fernet.generate_key()
+
+    with open(file, "rb") as read_file:
+        content = read_file.read()
+    
+    encrypted_content = Fernet(key).encrypt(content)
+
+    with open(file, "wb") as write_file:
+        write_file.write(encrypted_content)
+
+    key = key.decode("utf-8")
+    
+    print(f"The file {file} has been encrypted with the secret key {key}\nKeep it safe for decryption")
+
+
+def decrypt_file(file, key):
+    with open(file, "rb") as read_file:
+        encrypted_content = read_file.read()
+    
+    decrypted_content = Fernet(key).decrypt(encrypted_content)
+
+    with open(file, "wb") as write_file:
+        write_file.write(decrypted_content)
+    
+    print(f"The file {file} has been decrypted")
+
+
+def main():
+    print_banner()
+
+    args = get_args()
+
+    if (args.command == "encrypt"):
+        encrypt_file(args.file)
+
+    if (args.command == "decrypt"):
+        try:
+            decrypt_file(args.file, args.key)
+        except:
+            print("Wrong secret key")
+
+
+if __name__ == "__main__":
+    main()
