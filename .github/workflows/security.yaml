@@ -35,9 +35,11 @@ jobs:
       - name: Read Full Trivy Report
         id: read_report
         run: |
-          echo "REPORT<<EOF" >> $GITHUB_ENV
-          cat trivy_report.txt >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          {
+            echo "REPORT<<EOF"
+            cat trivy_report.txt
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Comment Full Trivy Report on PR
         uses: peter-evans/create-or-update-comment@v4
