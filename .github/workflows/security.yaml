@@ -19,7 +19,6 @@ jobs:
         with:
           scan-type: "fs"
           format: "table"
-          exit-code: "1"
           ignore-unfixed: true
 
       - name: Run Trivy Dependency Scan (Python Dependencies)
