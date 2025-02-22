@@ -49,4 +49,4 @@ jobs:
             ${{ env.REPORT }}
             ```
             🔗 *[Download Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
