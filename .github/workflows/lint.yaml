@@ -67,6 +67,7 @@ jobs:
           cd $WORKDIR
           
           for lang in ${{ env.languages }}; do
+            echo $lang
             case "$lang" in
               go)
                 golangci-lint run --out-format=github-actions ./... > analysis-reports/go-lint.txt || true
