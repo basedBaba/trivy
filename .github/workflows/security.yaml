@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write  # Required to comment on PRs
+  pull-requests: write
 
 jobs:
   security-scan:
@@ -34,10 +34,7 @@ jobs:
 
       - name: Read Trivy Report
         id: read_report
-        run: |
-          echo 'REPORT<<EOF' >> $GITHUB_ENV
-          cat trivy_report.txt >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+        run: echo "REPORT=$(cat trivy_report.txt | sed 's/^/    /')" >> $GITHUB_ENV
 
       - name: Comment Trivy Report on PR
         uses: peter-evans/create-or-update-comment@v4
