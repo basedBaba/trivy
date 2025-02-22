@@ -103,19 +103,24 @@ jobs:
 
           mv "$temp_file" analysis-reports/final-report.txt
 
+      - name: Set KEPLOY_REPORT Environment Variable
+        shell: bash
+        run: |
+          if [[ -f "analysis-reports/final-report.txt" ]]; then
+            KEPLOY_REPORT=$(cat analysis-reports/final-report.txt)
+          else
+            KEPLOY_REPORT="No test results available."
+          fi
+          echo "KEPLOY_REPORT<<EOF" >> $GITHUB_ENV
+          echo "$KEPLOY_REPORT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Comment on PR with Keploy Report
         if: success()
         uses: actions/github-script@v6
-        env:
-          KEPLOY_REPORT: ${{ env.KEPLOY_REPORT }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            if (!process.env.KEPLOY_REPORT) {
-              console.error('Error: KEPLOY_REPORT not found.');
-              process.exit(1);
-            }
-
             const fs = require('fs');
             const reportPath = 'analysis-reports/final-report.txt';
             let reportContent = 'No analysis report available';
@@ -124,7 +129,7 @@ jobs:
               reportContent = fs.readFileSync(reportPath, 'utf8');
             }
 
-            const summary = `## 📊 TestGPT Analysis Report\n\n${process.env.KEPLOY_REPORT || 'No test results available'}\n\n${reportContent}`;
+            const summary = `## 📊 TestGPT Analysis Report\n\n${process.env.KEPLOY_REPORT}\n\n${reportContent}`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
