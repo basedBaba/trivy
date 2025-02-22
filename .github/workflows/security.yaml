@@ -1,23 +1,37 @@
-name: build
+name: Security Scan with Trivy
+
 on:
-  push:
+  pull_request:
     branches:
       - main
-  pull_request:
+
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-20.04
+  security-scan:
+    name: Run Trivy Security Scan
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout PR Code
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner with rootfs command
-        uses: aquasecurity/trivy-action@0.28.0
+      - name: Run Trivy FS Scan (Source Code Vulnerabilities)
+        uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'rootfs'
-          scan-ref: 'rootfs-example-binary'
+          scan-type: "fs"
+          format: "table"
+          exit-code: "1"
           ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL'
+
+      - name: Run Trivy Dependency Scan (Python Dependencies)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "pip"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Upload Trivy Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-report
+          path: trivy_report.json
