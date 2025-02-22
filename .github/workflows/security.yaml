@@ -32,14 +32,11 @@ jobs:
           name: trivy-security-report
           path: trivy_report.txt
 
-      - name: Read Full Trivy Report
+      - name: Read Trivy Report
         id: read_report
-        run: |
-          echo "REPORT<<EOF" >> $GITHUB_ENV
-          cat trivy_report.txt >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+        run: echo "REPORT=$(cat trivy_report.txt)" >> $GITHUB_ENV
 
-      - name: Comment Full Trivy Report on PR
+      - name: Comment Trivy Report on PR
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -48,5 +45,4 @@ jobs:
             ```
             ${{ env.REPORT }}
             ```
-            🔗 *[Download Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*
           token: ${{ secrets.GITHUB_TOKEN }}
