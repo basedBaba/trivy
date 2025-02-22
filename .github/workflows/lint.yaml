@@ -1,33 +1,23 @@
-name: 'Keploy TestGPT'
+name: Keploy TestGPT Workflow
+
 on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 jobs:
-  lint:
-    name: Lint
+  keploy-test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch PR changes
-        id: pr-files
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ inputs.github-token }}
-          script: |
-            try {
-              const response = await github.rest.pulls.listFiles({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.issue.number,
-              });
-              return response.data.map(file => file.filename);
-            } catch (error) {
-              core.setFailed(`Failed to fetch PR files: ${error.message}`);
-            }
+      - name: Set up environment variables
+        run: echo "WORKDIR=${{ github.workspace }}/${{ inputs.working-directory }}" >> $GITHUB_ENV
 
       - name: Detect languages
         id: language-detection
@@ -40,22 +30,22 @@ jobs:
             ["py"]="python"
             ["java"]="java"
           )
-          
+
           LANGUAGES=""
-          for file in ${{ steps.pr-files.outputs.result }}; do
+          for file in $(git diff --name-only ${{ github.event.before }} ${{ github.sha }}); do
             ext="${file##*.}"
             if [[ -n "${extensions[$ext]}" ]]; then
               LANGUAGES+="${extensions[$ext]} "
             fi
           done
-          
+
           UNIQUE_LANGS=$(echo "$LANGUAGES" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-          echo "languages=$UNIQUE_LANGS" >> $GITHUB_OUTPUT
+          echo "languages=$UNIQUE_LANGS" >> $GITHUB_ENV
 
       - name: Install analysis tools
         shell: bash
         run: |
-          for lang in ${{ steps.language-detection.outputs.languages }}; do
+          for lang in ${{ env.languages }}; do
             case "$lang" in
               go)
                 curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s
@@ -73,10 +63,10 @@ jobs:
       - name: Run code analysis
         shell: bash
         run: |
-          cd ${{ inputs.working-directory }}
           mkdir -p analysis-reports
-          
-          for lang in ${{ steps.language-detection.outputs.languages }}; do
+          cd $WORKDIR
+
+          for lang in ${{ env.languages }}; do
             case "$lang" in
               go)
                 golangci-lint run --out-format=github-actions ./... > analysis-reports/go-lint.txt
@@ -92,54 +82,52 @@ jobs:
             esac
           done
 
+      - name: Run Keploy tests
+        id: keploy-test
+        shell: bash
+        run: |
+          chmod +x ${GITHUB_WORKSPACE}/install.sh
+          ${GITHUB_WORKSPACE}/install.sh > report.txt
+          cat report.txt
+
+          # Extract test summary
+          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total tests: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_tests.out
+          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test passed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_passed.out
+          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test failed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_failed.out
+
+          cat final_total_tests.out final_total_passed.out final_total_failed.out > final.out
+          echo 'KEPLOY_REPORT<<EOF' >> $GITHUB_ENV
+          cat final.out >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
       - name: Check if report is generated
         run: |
-          if [ -s ${GITHUB_WORKSPACE}/${WORKDIR}/final.out ]; then
+          if [ -s final.out ]; then
             echo "Report generated successfully."
           else
             echo "Error: Report not generated." >&2
             exit 1
           fi
         shell: bash
-        
-      - name: Comment on PR
+
+      - name: Comment on PR with Keploy Report
         if: success()
         uses: actions/github-script@v6
         env:
-          KEPLOY_REPORT: ${{ steps.keploy-test-report.outputs.KEPLOY_REPORT }}
+          KEPLOY_REPORT: ${{ env.KEPLOY_REPORT }}
         with:
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             if (!process.env.KEPLOY_REPORT) {
               console.error('Error: KEPLOY_REPORT not found.');
               process.exit(1);
             }
-            const fs = require('fs');
-            const path = require('path');
-            
-            function readReport(filepath) {
-              try {
-                return fs.readFileSync(filepath, 'utf8');
-              } catch (error) {
-                return null;
-              }
-            }
-            
-            const reportsDir = path.join('${{ inputs.working-directory }}', 'analysis-reports');
-            const reports = fs.readdirSync(reportsDir)
-              .filter(file => file.endsWith('.txt') || file.endsWith('.xml'))
-              .map(file => readReport(path.join(reportsDir, file)))
-              .filter(Boolean);
-            
-            const summary = `## 📊 TestGPT Analysis Report
-            
-            ${process.env.KEPLOY_REPORT || 'No test results available'}
-            
-            ${reports.join('\n\n')}`;
+
+            const summary = `## 📊 TestGPT Analysis Report\n\n${process.env.KEPLOY_REPORT || 'No test results available'}`;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: summary
-            })
+            });
