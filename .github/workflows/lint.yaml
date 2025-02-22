@@ -1,6 +1,6 @@
 name: 'Keploy TestGPT'
 on:
-  push:
+  pull_request:
     branches:
       - main
 description: "TestGPT is a GitHub Action designed to execute Keploy test cases and generate detailed test reports."
