@@ -8,22 +8,6 @@ inputs:
   working-directory:
     description: Relative path under $GITHUB_WORKSPACE where the repository was checked out
     required: true
-  command:
-    description: Command to run the application
-    required: true
-  keploy-path:
-    description: Path to keploy
-    required: true
-    default: ./
-  delay:
-    description: Time to start application
-    required: true
-    default: 10
-  container-name:
-    description: Name of the container in case of "docker compose" command
-  build-delay:
-    description: Time to wait for docker container build
-    default: 50s
 
 jobs:
   runs-on: ubuntu-latest
