@@ -1,9 +1,7 @@
 name: Security Scan with Trivy
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
 
 jobs:
   security-scan:
@@ -15,24 +13,26 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy FS Scan (Source Code Vulnerabilities)
-        run: trivy fs --format table --output trivy_report.md .
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          format: "table"
+          ignore-unfixed: true
+          output: trivy_report.txt
 
       - name: Upload Trivy Report as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: trivy-security-report
-          path: trivy_report.md
+          path: trivy_report.txt
 
-      - name: Format Trivy Report for PR Comment
-        run: |
-          echo '### 🔍 Trivy Security Scan Results' > comment.md
-          echo '' >> comment.md
-          echo '````markdown' >> comment.md
-          cat trivy_report.md | head -c 65000 >> comment.md
-          echo '````' >> comment.md
-        shell: bash
-
-      - name: Comment on PR
-        uses: mshick/add-pr-comment@v2
+      - name: Comment Trivy Report on PR
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          message-path: comment.md
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## 🔍 Trivy Security Scan Results
+            ```
+            $(cat trivy_report.txt | head -n 50)
+            ```
+            *Showing first 50 lines. Full report available in artifacts.*
