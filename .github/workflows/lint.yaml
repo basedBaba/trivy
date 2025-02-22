@@ -104,7 +104,7 @@ jobs:
           mv "$temp_file" analysis-reports/final-report.txt
 
       - name: Upload Final Report as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TestGPT-Analysis-Report
           path: analysis-reports/final-report.txt
