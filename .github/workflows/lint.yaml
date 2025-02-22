@@ -88,13 +88,20 @@ jobs:
       - name: Combine Analysis Reports
         shell: bash
         run: |
-          echo "## 📊 Combined TestGPT Analysis Report" > analysis-reports/final-report.txt
-          
+          mkdir -p analysis-reports
+          temp_file=$(mktemp) # Temporary file to avoid 'input file is output file' issue
+
+          echo "## 📊 Combined TestGPT Analysis Report" > "$temp_file"
+
           for report in analysis-reports/*; do
-            echo "### $(basename $report)" >> analysis-reports/final-report.txt
-            cat $report >> analysis-reports/final-report.txt
-            echo -e "\n---\n" >> analysis-reports/final-report.txt
+            if [ -f "$report" ]; then
+              echo "### $(basename "$report")" >> "$temp_file"
+              cat "$report" >> "$temp_file"
+              echo -e "\n---\n" >> "$temp_file"
+            fi
           done
+
+          mv "$temp_file" analysis-reports/final-report.txt
 
       - name: Comment on PR with Keploy Report
         if: success()
