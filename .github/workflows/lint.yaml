@@ -3,11 +3,6 @@ on:
   pull_request:
     branches:
       - main
-description: "TestGPT is a GitHub Action designed to execute Keploy test cases and generate detailed test reports."
-author: Sonichigo
-branding:
-  icon: 'aperture'
-  color: 'orange'
 
 inputs:
   working-directory:
@@ -30,9 +25,12 @@ inputs:
     description: Time to wait for docker container build
     default: 50s
 
-runs:
-  using: "composite"
+jobs:
+  runs-on: ubuntu-latest
   steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
     - name: Fetch PR changes
       id: pr-files
       uses: actions/github-script@v6
@@ -90,6 +88,7 @@ runs:
               ;;
           esac
         done
+
     - name: Run code analysis
       shell: bash
       run: |
@@ -111,6 +110,7 @@ runs:
               ;;
           esac
         done
+
     - name: Check if report is generated
       run: |
         if [ -s ${GITHUB_WORKSPACE}/${WORKDIR}/final.out ]; then
@@ -120,6 +120,7 @@ runs:
           exit 1
         fi
       shell: bash
+      
     - name: Comment on PR
       if: success()
       uses: actions/github-script@v6
