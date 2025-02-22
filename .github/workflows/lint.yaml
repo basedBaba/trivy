@@ -92,8 +92,6 @@ jobs:
           mkdir -p analysis-reports
           temp_file=$(mktemp) # Temporary file to avoid 'input file is output file' issue
 
-          echo "## 📊 Combined TestGPT Analysis Report" > "$temp_file"
-
           for report in analysis-reports/*; do
             if [ -f "$report" ]; then
               echo "### $(basename "$report")" >> "$temp_file"
@@ -111,37 +109,24 @@ jobs:
           path: analysis-reports/final-report.txt
           if-no-files-found: warn
 
-      - name: Set KEPLOY_REPORT Environment Variable
-        shell: bash
+      - name: Read Full Lint Report
+        id: read_report
         run: |
-          if [[ -f "analysis-reports/final-report.txt" ]]; then
-            KEPLOY_REPORT=$(cat analysis-reports/final-report.txt)
-          else
-            KEPLOY_REPORT="No test results available."
-          fi
-          echo "KEPLOY_REPORT<<EOF" >> $GITHUB_ENV
-          echo "$KEPLOY_REPORT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          {
+            echo "REPORT<<EOF"
+            cat analysis-reports/final-report.txt
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
-      - name: Comment on PR with Keploy Report
-        if: success()
-        uses: actions/github-script@v6
+      - name: Comment Full Trivy Report on PR
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const reportPath = 'analysis-reports/final-report.txt';
-            let reportContent = 'No analysis report available';
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## 🔍 Lint Scan Results
+            ```
+            ${{ env.REPORT }}
+            ```
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-            if (fs.existsSync(reportPath)) {
-              reportContent = fs.readFileSync(reportPath, 'utf8');
-            }
-
-            const summary = `## 📊 TestGPT Analysis Report\n\n${process.env.KEPLOY_REPORT}\n\n${reportContent}`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: summary
-            });
+  
