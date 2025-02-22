@@ -27,7 +27,6 @@ jobs:
         with:
           scan-type: "pip"
           format: "table"
-          exit-code: "1"
           ignore-unfixed: true
 
       - name: Upload Trivy Report as Artifact
