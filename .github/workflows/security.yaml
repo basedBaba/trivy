@@ -1,7 +1,7 @@
 name: Security Scan with Trivy
 
 on:
-  push:
+  pull_request:
     branches:
       - main
 
