@@ -14,5 +14,5 @@ jobs:
       with:
         working-directory: /
         delay: 10
-        command: node src/app.js
+        command: python app.py
         keploy-path: ./
