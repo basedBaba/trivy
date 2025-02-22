@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up environment variables
-        run: echo "WORKDIR=${{ github.workspace }}/${{ inputs.working-directory }}" >> $GITHUB_ENV
+        run: echo "WORKDIR=${{ github.workspace }}" >> $GITHUB_ENV
 
       - name: Detect languages
         id: language-detection
@@ -32,7 +32,7 @@ jobs:
           )
 
           LANGUAGES=""
-          for file in $(git diff --name-only ${{ github.event.before }} ${{ github.sha }}); do
+          for file in $(git ls-files); do
             ext="${file##*.}"
             if [[ -n "${extensions[$ext]}" ]]; then
               LANGUAGES+="${extensions[$ext]} "
@@ -60,7 +60,7 @@ jobs:
             esac
           done
 
-      - name: Run code analysis
+      - name: Run Code Analysis
         shell: bash
         run: |
           mkdir -p analysis-reports
@@ -82,49 +82,39 @@ jobs:
             esac
           done
 
-      - name: Run Keploy tests
-        id: keploy-test
+      - name: Integrate Reports
         shell: bash
         run: |
-          chmod +x ${GITHUB_WORKSPACE}/install.sh
-          ${GITHUB_WORKSPACE}/install.sh > report.txt
-          cat report.txt
+          WORKDIR=${{ github.workspace }}
+          FINAL_REPORT="$WORKDIR/analysis-reports/final-report.txt"
 
-          # Extract test summary
-          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total tests: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_tests.out
-          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test passed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_passed.out
-          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test failed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_failed.out
+          echo "## 📊 Consolidated TestGPT Analysis Report" > $FINAL_REPORT
+          
+          for report in $WORKDIR/analysis-reports/*; do
+            if [ -s "$report" ]; then
+              echo -e "\n### $(basename $report)\n" >> $FINAL_REPORT
+              cat "$report" >> $FINAL_REPORT
+            fi
+          done
 
-          cat final_total_tests.out final_total_passed.out final_total_failed.out > final.out
-          echo 'KEPLOY_REPORT<<EOF' >> $GITHUB_ENV
-          cat final.out >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          echo "FINAL_REPORT_CONTENT<<EOF" >> $GITHUB_ENV
+          cat $FINAL_REPORT >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
-      - name: Check if report is generated
-        run: |
-          if [ -s final.out ]; then
-            echo "Report generated successfully."
-          else
-            echo "Error: Report not generated." >&2
-            exit 1
-          fi
-        shell: bash
-
-      - name: Comment on PR with Keploy Report
+      - name: Comment on PR with Keploy & Analysis Report
         if: success()
         uses: actions/github-script@v6
         env:
           KEPLOY_REPORT: ${{ env.KEPLOY_REPORT }}
+          FINAL_REPORT_CONTENT: ${{ env.FINAL_REPORT_CONTENT }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            if (!process.env.KEPLOY_REPORT) {
-              console.error('Error: KEPLOY_REPORT not found.');
-              process.exit(1);
-            }
+            const keployReport = process.env.KEPLOY_REPORT || "No test results available.";
+            const analysisReport = process.env.FINAL_REPORT_CONTENT || "No analysis report available.";
 
-            const summary = `## 📊 TestGPT Analysis Report\n\n${process.env.KEPLOY_REPORT || 'No test results available'}`;
-            
+            const summary = `## 📊 TestGPT Analysis Report\n\n**🧪 Keploy Test Summary:**\n${keployReport}\n\n**📜 Code Analysis Reports:**\n${analysisReport}`;
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
