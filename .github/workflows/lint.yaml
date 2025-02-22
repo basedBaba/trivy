@@ -103,6 +103,13 @@ jobs:
 
           mv "$temp_file" analysis-reports/final-report.txt
 
+      - name: Upload Final Report as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: TestGPT-Analysis-Report
+          path: analysis-reports/final-report.txt
+          if-no-files-found: warn
+
       - name: Set KEPLOY_REPORT Environment Variable
         shell: bash
         run: |
