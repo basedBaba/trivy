@@ -12,10 +12,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner in repo mode
+      - name: Run Trivy vulnerability scanner with rootfs command
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          scan-type: 'fs'
+          scan-type: 'rootfs'
+          scan-ref: 'rootfs-example-binary'
           ignore-unfixed: true
           format: 'sarif'
           output: 'trivy-results.sarif'
