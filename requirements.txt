@@ -1,0 +1,4 @@
+flask==0.12.3       # 🚨 CVE-2018-1000656 (Remote Code Execution)
+requests==2.19.1    # 🚨 CVE-2018-18074 (Session Fixation Attack)
+pyyaml==3.13        # 🚨 CVE-2017-18342 (Arbitrary Code Execution)
+django==1.11.29     # 🚨 CVE-2020-9402 (XSS Vulnerability)
