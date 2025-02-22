@@ -29,22 +29,22 @@ jobs:
           ["ts"]="javascript" 
           ["py"]="python"
           ["java"]="java"
-        )
+          )
 
-        LANGUAGES=""
+          LANGUAGES=""
 
-        # Find all files in the repository and extract unique file extensions
-        for file in $(find . -type f); do
-          echo $file
-          ext="${file##*.}"
-          if [[ -n "${extensions[$ext]}" ]]; then
-            LANGUAGES+="${extensions[$ext]} "
-          fi
-        done
+          # Find all files in the repository and extract unique file extensions
+          for file in $(find . -type f); do
+            echo $file
+            ext="${file##*.}"
+            if [[ -n "${extensions[$ext]}" ]]; then
+              LANGUAGES+="${extensions[$ext]} "
+            fi
+          done
 
-        # Get unique languages
-        UNIQUE_LANGS=$(echo "$LANGUAGES" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-        echo "languages=$UNIQUE_LANGS" >> $GITHUB_ENV
+          # Get unique languages
+          UNIQUE_LANGS=$(echo "$LANGUAGES" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          echo "languages=$UNIQUE_LANGS" >> $GITHUB_ENV
 
       - name: Install analysis tools
         shell: bash
