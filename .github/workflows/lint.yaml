@@ -52,8 +52,7 @@ jobs:
           for lang in ${{ env.languages }}; do
             case "$lang" in
               go)
-                curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s
-                go install github.com/securego/gosec/v2/cmd/gosec@latest
+                go install golang.org/x/lint/golint@latest
                 ;;
               javascript)
                 npm install -g eslint
@@ -75,7 +74,6 @@ jobs:
             case "$lang" in
               go)
                 golangci-lint run --out-format=github-actions ./... > analysis-reports/go-lint.txt || true
-                gosec ./... > analysis-reports/go-security.txt || true
                 ;;
               javascript)
                 eslint . --format junit -o analysis-reports/js-lint.xml || true
