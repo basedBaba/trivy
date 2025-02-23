@@ -15,7 +15,6 @@ jobs:
 
   generate-pdf:
     runs-on: ubuntu-latest
-    needs: [lint, security-scan, run_test_cases]
 
     steps:
       - name: Checkout repository
