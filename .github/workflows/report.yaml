@@ -1,9 +1,10 @@
 name: Generate PR Comments PDF
 
 on:
-  pull_request:
-    types: [opened, synchronize]
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Lint Code", "Security Scan", "Run Test Cases"]
+    types:
+      - completed
 
 jobs:
   start-workflow:
