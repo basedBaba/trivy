@@ -2,7 +2,7 @@ name: Generate PR Comments PDF
 
 on:
   workflow_run:
-    workflows: ["Lint Code", "Security Scan", "Run Test Cases"]
+    workflows: ["Lint Workflow", "Security Scan with Trivy", "Run test-cases"]
     types:
       - completed
 
