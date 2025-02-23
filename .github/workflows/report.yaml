@@ -6,6 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
+  start-workflow:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Workflow Initialized
+          run: echo "Starting workflow execution"
+
   generate-pdf:
     runs-on: ubuntu-latest
     needs: [lint, security-scan, run_test_cases]
