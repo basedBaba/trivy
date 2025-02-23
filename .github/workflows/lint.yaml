@@ -1,15 +1,17 @@
-name: Keploy TestGPT Workflow
+name: Lint Workflow
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
-  keploy-test:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -118,7 +120,7 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_ENV"
 
-      - name: Comment Full Trivy Report on PR
+      - name: Comment Full Lint Report on PR
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}

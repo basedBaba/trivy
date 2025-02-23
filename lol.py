@@ -1,78 +1,61 @@
-#!/usr/bin/env python3
+import os, sys, random, math
+   
+def BAD_function(x,y,z):return x+y+z  
 
+class badCLASS:  
+ def __init__(self,value):self.value=value  
 
-import argparse
-from cryptography.fernet import Fernet
+ def add(self,other):return self.value+other.value  
 
-
-def print_banner():
-    print(r"""
-                  ____              
-      ___  ____  / __ \___  _____   
-     / _ \/ __ \/ / / / _ \/ ___/   
-    /  __/ / / / /_/ /  __/ /__     
-    \___/_/ /_/_____/\___/\___/     
-                                     
-    """)
-
-
-def get_args():
-    parser = argparse.ArgumentParser(description="Encrypt/Decrypt files")
-
-    parser.add_argument("command", help="encrypt/decrypt")
-    parser.add_argument("file", help="file to be encrypted/decrypted")
-    parser.add_argument("-k", "--key", help="secret key for decryption")
-
-    args = parser.parse_args()
-
-    if args.command == "decrypt" and not args.key:
-        parser.error("enter the secret key for decryption")
-        
-    return args
-
-
-def encrypt_file(file):
-    key = Fernet.generate_key()
-
-    with open(file, "rb") as read_file:
-        content = read_file.read()
+def  another_function():  
+    a=  1+1
+    b =2 *3
+    c=4/ 5
+    d=6   -7  
     
-    encrypted_content = Fernet(key).encrypt(content)
-
-    with open(file, "wb") as write_file:
-        write_file.write(encrypted_content)
-
-    key = key.decode("utf-8")
+    unused_var = "This variable is never used"  
     
-    print(f"The file {file} has been encrypted with the secret key {key}\nKeep it safe for decryption")
+    if(a> 0):print("A is positive")  
 
+    if b < 10:
+        print(  "Bad indentation and spacing") 
 
-def decrypt_file(file, key):
-    with open(file, "rb") as read_file:
-        encrypted_content = read_file.read()
+    if c>5: 
+          print("More indentation problems")  
+          
+    x= "This is a very long line with way too many characters that will trigger the E501 error because it exceeds 79 or 88 characters in length and is unreadable"
     
-    decrypted_content = Fernet(key).decrypt(encrypted_content)
-
-    with open(file, "wb") as write_file:
-        write_file.write(decrypted_content)
+    try:
+       os.mkdir('test')  
+    except: print("Error");  
     
-    print(f"The file {file} has been decrypted")
+    return a+b+c+d
 
+for   i   in range( 10 ):  
+    print(  i )  
+    
+x = [1,2,3,4, 5 ,6 , 7 ,8,9, 10]  
+y= ( 10,20,30, 40,  50 )  
 
-def main():
-    print_banner()
+z={ "one":1,"two":2 ,"three" :3, "four" : 4 }  
 
-    args = get_args()
+def misaligned_function():
+    x = 1  
+    y = 2  
+    z = 3  
+    return x+y+z
 
-    if (args.command == "encrypt"):
-        encrypt_file(args.file)
+def no_docstring():pass  
 
-    if (args.command == "decrypt"):
-        try:
-            decrypt_file(args.file, args.key)
-        except:
-            print("Wrong secret key")
+def unnecessary_lambda(): return (lambda x:x+1)(5)  
 
+if __name__=="__main__":
+  print("This is an awful script")  
+  another_function()
+  obj=badCLASS(10)  
+  print(obj.add(badCLASS(5)))
+  print(BAD_function(1, 2, 3))  
 
-if __name__ == "__main__":
-    main()
+  print(misaligned_function())  
+
+  print(unnecessary_lambda())
