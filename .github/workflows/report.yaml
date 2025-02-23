@@ -22,7 +22,7 @@ jobs:
 
       - name: Fetch PR comments
         run: |
-          COMMENTS=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments --jq '.[].body')
+          COMMENTS=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.workflow_run.pull_requests[0].number }}/comments --jq '.[].body')
           echo "$COMMENTS" > comments.txt
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
